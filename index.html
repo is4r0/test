@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- initialize theme vars
+    https://coolors.co/10002b-240046-3c096c-5a189a-7b2cbf-9d4edd-c77dff-e0aaff -->
+    <!-- initialize externals -->
+    <meta content="#c77dff" data-react-helmet="true" name="theme-color" />
+    <meta name="googlebot" content="index, follow, snippet" />
+    <meta property="og:type" content="website" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta property="og:title" content="IXL | Math, Language Arts, Science, Social Studies, and Spanish" />
+    <meta property="og:description" content="IXL is the world&#39;s most popular subscription-based learning site for K–12. Used by over 17 million students, IXL provides personalized learning in more than 17,000 topics, covering math, language arts, science, social studies, and Spanish. Interactive questions, awards, and certificates keep kids motivated as they master skills." />
+    <meta property="og:url" content="https://www.ixl.com" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="IXL Learning" />
+    <meta property="og:image" content="https://www.ixl.com/dv3/powZqMuTE7du4asFrVyNGxxoqkw/yui3/opengraph/assets/general_us.png" />
+    <!-- initialize my stuff -->
+    <script src="/js/all.min.js" async="">
+    </script>
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/sidebar.css" />
+    <link rel="manifest" href="/manifest.json" />
+    <!-- seo + other things -->
+    <title>
+      IXL | Math, Language Arts, Science, Social Studies, and Spanish
+    </title>
+    <link rel="icon" href="https://ixl.com/ixl-favicon.png" id="favicon" />
+    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3415518411898563" crossorigin="anonymous"></script> -->
+    <script>
+      window.addEventListener(&#39;beforeunload&#39;, function (event) {
+			    event.preventDefault();
+			    event.returnValue = &#39;&#39;;
+			    return &#39;Are you sure you want to leave? Any unsaved changes will be lost.&#39;;
+			});
+			function connectToSocket() {
+				let socket = new WebSocket(&#34;/socket&#34;);
+				socket.addEventListener(&#34;open&#34;, () =&gt; {
+					let cookies = document.cookie.split(&#34;; &#34;);
+					for (let i = 0; i &lt; cookies.length; i++) {
+						if (cookies[i].trim().startsWith(&#34;token=&#34;)) {
+							socket.send(cookies[i].trim());
+						}
+					}
+				});
+				socket.addEventListener(&#34;message&#34;, (e)=&gt;{
+					if(e.data.split(&#34;=&#34;)[0] == &#34;online&#34;) {
+						socket.send(&#34;1&#34;);
+						document.getElementById(&#34;online&#34;).innerText = `currently online: ${e.data.split(&#34;=&#34;)[1]}`;
+					} else {
+						if(e.data.startsWith(&#34;annc&#34;)) {
+							let message = e.data.split(&#34;;;&#34;);
+							sAlert(message[1], message[2]);
+						}
+					}
+				})
+				socket.addEventListener(&#34;close&#34;, () =&gt; {
+					setTimeout(() =&gt; {
+						connectToSocket();
+					}, 1000 * 3)
+				})
+			}
+
+			let currentPanic = {key: &#34;&#34;, url: &#34;&#34;};
+			const weatherCodeToEmoji = {
+			    0: &#39;☀️&#39;,
+						
+			    1: &#39;🌤️&#39;,
+			    2: &#39;⛅&#39;,
+			    3: &#39;☁️&#39;,
+						
+			    45: &#39;🌫️&#39;,
+			    48: &#39;🌫️&#39;,
+						
+			    51: &#39;🌦️&#39;,
+			    53: &#39;🌧️&#39;,
+			    55: &#39;🌧️&#39;,
+			    56: &#39;🌧️&#39;,
+			    57: &#39;🌧️&#39;,
+						
+			    61: &#39;🌧️&#39;,
+			    63: &#39;🌧️&#39;,
+			    65: &#39;🌧️&#39;,
+			    66: &#39;🥶🌧️&#39;,
+			    67: &#39;🥶🌧️&#39;,
+						
+			    71: &#39;❄️&#39;,
+			    73: &#39;❄️&#39;,
+			    75: &#39;❄️&#39;,
+			    77: &#39;🌨️&#39;,
+						
+			    80: &#39;🌧️&#39;,
+			    81: &#39;🌧️&#39;,
+			    82: &#39;🌧️&#39;,
+						
+			    85: &#39;🌨️&#39;,
+			    86: &#39;🌨️&#39;,
+						
+			    95: &#39;⛈️&#39;,
+			    96: &#39;⛈️&#39;,
+			    99: &#39;⛈️&#39;,
+			};
+
+			async function getWeather() {
+				// we do not store this data :)
+            	let locationData = await fetch(&#34;https://speed.cloudflare.com/meta&#34;)
+            	.then(data =&gt; data.json());
+
+            	let weatherData = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${locationData.latitude}&amp;longitude=${locationData.longitude}&amp;current=temperature_2m,weather_code&amp;temperature_unit=fahrenheit`)
+            	.then(data =&gt; data.json());
+
+				document.getElementById(&#34;weather&#34;).innerText = `${Math.round(weatherData[&#34;current&#34;][&#34;temperature_2m&#34;])}°F ${weatherCodeToEmoji[weatherData[&#34;current&#34;][&#34;weather_code&#34;]]}`
+			}
+			function updateTime() {
+				document.getElementById(&#34;time&#34;).innerText = (new Date()).toLocaleTimeString();
+			}
+			function sAlert(title, message) {
+				let alertHolder = document.createElement(&#34;alert&#34;);
+				let alertTitle = document.createElement(&#34;h1&#34;);
+				alertTitle.innerHTML = title;
+				let alertMessage = document.createElement(&#34;p&#34;);
+				alertMessage.innerHTML = message;
+				alertHolder.appendChild(alertTitle);
+				alertHolder.appendChild(alertMessage);
+				document.body.appendChild(alertHolder);
+				alertHolder.addEventListener(&#34;click&#34;, alertHolder.remove);
+				setTimeout(() =&gt; {
+					alertHolder.remove();
+				}, 1000 * 15)
+			}
+
+			function welcomeScreen() {
+				let screenIDs = [&#34;zero&#34;, &#34;one&#34;, &#34;two&#34;, &#34;three&#34;, &#34;four&#34;];
+				let screens = screenIDs.map((e) =&gt; document.getElementById(e));
+				let index = 0;
+
+				let welcome = document.querySelector(&#34;welcome&#34;);
+				let blur = document.getElementById(&#34;blur&#34;);
+				
+				// TODO: finish
+				hideAll();
+				return;
+				// LEAKED LEAKED!!!
+				// new selenite feature woah
+				
+				function hideAll() {
+					welcome.remove();
+					blur.remove();
+				}
+				function finish() {
+                    welcome.style.opacity = &#34;0&#34;;
+                    blur.style.opacity = &#34;0&#34;;
+                    setTimeout(() =&gt; {
+                        hideAll();
+						document.cookie = &#34;selenite.welcomeFinished=true&#34;;
+                    }, 1000)
+				}
+				function showNextScreen() {
+					index++;
+					if(index == screens.length) {finish();return;};
+					screens[index-1].style.transform = &#34;translateY(-100%)&#34;;
+					screens[index].style.transform = &#34;translateY(0%)&#34;;
+					screens[index].querySelector(&#34;#nextPage&#34;).addEventListener(&#34;click&#34;, showNextScreen);
+				}
+				if(document.cookie.includes(&#34;selenite.welcomeFinished&#34;)) hideAll();
+
+				welcome.style.display = &#34;block&#34;;
+                welcome.style.opacity = &#34;1&#34;;
+				screens[0].style.transform = &#34;translateY(0%)&#34;;
+				screens[0].querySelector(&#34;#nextPage&#34;).addEventListener(&#34;click&#34;, showNextScreen);
+				screens[0].querySelector(&#34;#skip&#34;).addEventListener(&#34;click&#34;, finish);
+			}
+			document.addEventListener(&#34;DOMContentLoaded&#34;, async ()=&gt;{
+				connectToSocket();
+				getWeather();
+				setInterval(getWeather, 1000 * 60 * 30);
+				setInterval(updateTime, 1000 / 2);
+				let hash = location.hash.substring(1);
+				if(hash) {
+					// location.hash = &#34;&#34;;
+					if(hash.startsWith(&#34;/u/&#34;)) {
+						document.getElementById(&#34;iframe&#34;).src = hash;
+					} else if(hash.startsWith(&#34;/g/&#34;)) {
+						document.querySelector(&#34;loading-game&#34;).style.display = &#34;flex&#34;;
+						await fetch(&#34;/resources/games.json&#34;)
+						.then(data =&gt; data.json())
+						.then(data =&gt; {
+							data.forEach(el =&gt; {
+								if(el.directory == hash.substring(3)) {
+									document.getElementById(&#34;iframe&#34;).src = `/loader.html?title=${encodeURIComponent(el.name)}&amp;dir=${el.directory}&amp;img=${el.image}&amp;type=g`
+								}
+							})
+						})
+						document.querySelector(&#34;loading-game&#34;).style.display = &#34;none&#34;;
+					} else if(hash.startsWith(&#34;/a/&#34;)) {
+						document.querySelector(&#34;loading-game&#34;).style.display = &#34;flex&#34;;
+						await fetch(&#34;/resources/apps.json&#34;)
+						.then(data =&gt; data.json())
+						.then(data =&gt; {
+							data.forEach(el =&gt; {
+								if(el.directory == hash.substring(3)) {
+									document.getElementById(&#34;iframe&#34;).src = `/loader.html?title=${encodeURIComponent(el.name)}&amp;dir=${el.directory}&amp;img=${el.image}&amp;type=g`
+								}
+							})
+						});
+						document.querySelector(&#34;loading-game&#34;).style.display = &#34;none&#34;;
+					} else {
+						welcomeScreen();
+					}
+				} else {
+					welcomeScreen();
+				}
+				let currentCloak = {name: &#34;&#34;, icon: &#34;&#34;};
+				setInterval(()=&gt;{
+					if(localStorage.getItem(&#34;selenite.tab-cloak&#34;)) {
+						let cloak = JSON.parse(localStorage.getItem(&#34;selenite.tab-cloak&#34;));
+						if((cloak.name != currentCloak.name) || (cloak.icon != currentCloak.icon)) {
+							document.title = cloak.name.length &gt; 0 ? cloak.name : &#34;Selenite&#34;
+							document.getElementById(&#34;favicon&#34;).href = cloak.icon.length &gt; 0 ? &#34;https://s2.googleusercontent.com/s2/favicons?domain_url=&#34; + cloak.icon : &#34;favicon.ico&#34;
+							currentCloak = cloak;
+						}
+					};
+					if(localStorage.getItem(&#34;selenite.panic-mode&#34;)) {
+						let panic = JSON.parse(localStorage.getItem(&#34;selenite.panic-mode&#34;));
+						if((panic.key != currentPanic.key) || (panic.url != currentPanic.url)) {
+							currentPanic = panic;
+						}
+					}
+				}, 500);
+				document.addEventListener(&#34;keydown&#34;, (e) =&gt; {
+					if(currentPanic.key.length &gt; 0 &amp;&amp; currentPanic.url.length &gt; 0) {
+						if(e.key = currentPanic.key) {
+							location.href = currentPanic.url;
+						}
+					}
+				})
+				document.getElementById(&#34;iframe&#34;).contentWindow.document.addEventListener(&#34;keydown&#34;, (e) =&gt; {
+					if(currentPanic.key.length &gt; 0 &amp;&amp; currentPanic.url.length &gt; 0) {
+						if(e.key = currentPanic.key) {
+							location.href = currentPanic.url;
+						}
+					}
+				})
+				document.getElementById(&#34;iframe&#34;).addEventListener(&#34;load&#34;, () =&gt; {
+					document.getElementById(&#34;iframe&#34;).contentWindow.addEventListener(&#34;beforeunload&#34;, () =&gt; {
+						alert(&#34;unloading! show loading bar&#34;)
+					})
+				});
+				document.querySelectorAll(&#34;.sidebar-item&#34;).forEach((item) =&gt; {
+					if(item.childNodes[0].target) {
+						item.childNodes[0].addEventListener(&#34;click&#34;, (e)=&gt;{
+							console.log(&#34;created event listneer&#34;)
+							e.preventDefault();
+							document.getElementById(&#34;iframe&#34;).src = item.childNodes[0].target;
+						})
+					} else if(item.childNodes[0].id == &#34;openblank&#34;) {
+						item.childNodes[0].addEventListener(&#34;click&#34;, (e)=&gt;{
+							e.preventDefault();
+							win = window.open();
+							win.document.body.style.margin = &#34;0&#34;;
+							win.document.body.style.height = &#34;100vh&#34;;
+							html = `&lt;style&gt;*{margin:0;padding:0;border:none;height:100vh;width:100vw}&lt;/style&gt;&lt;iframe src=${location.href}&gt;&lt;/iframe&gt;`;
+							win.document.querySelector(&#34;html&#34;).innerHTML = html;
+							location.href = &#34;https://google.com&#34;;
+							window.close();
+						})
+					} else if(item.childNodes[0].id == &#34;fullscreen&#34;) {
+						item.childNodes[0].addEventListener(&#34;click&#34;, (e)=&gt;{
+							document.getElementById(&#34;iframe&#34;).requestFullscreen();
+						})
+					}
+				})
+				document.getElementById(&#34;open-bottom-menu&#34;).addEventListener(&#34;click&#34;, ()=&gt;{
+					document.getElementById(&#34;bottom-menu&#34;).setAttribute(&#34;enabled&#34;, !(document.getElementById(&#34;bottom-menu&#34;).getAttribute(&#34;enabled&#34;) === &#34;true&#34;));
+					document.getElementById(&#34;open-bottom-menu&#34;).setAttribute(&#34;enabled&#34;, !(document.getElementById(&#34;open-bottom-menu&#34;).getAttribute(&#34;enabled&#34;) === &#34;true&#34;));
+				});
+				document.getElementById(&#34;bottom-menu&#34;).addEventListener(&#34;click&#34;, ()=&gt;{
+					document.getElementById(&#34;bottom-menu&#34;).setAttribute(&#34;enabled&#34;, !(document.getElementById(&#34;bottom-menu&#34;).getAttribute(&#34;enabled&#34;) === &#34;true&#34;));
+					document.getElementById(&#34;open-bottom-menu&#34;).setAttribute(&#34;enabled&#34;, !(document.getElementById(&#34;open-bottom-menu&#34;).getAttribute(&#34;enabled&#34;) === &#34;true&#34;));
+				});
+			})
+    </script>
+  </head>
+  <body>
+    <mobile-warning>
+      <h1 class="title">
+        your device is not supported!
+      </h1>
+      <p>
+        please rotate your screen for the best experience.
+      </p>
+    </mobile-warning>
+    <loading-game>
+      <h1 class="title">
+        we are loading your game!
+      </h1>
+      <p>
+        please allow us to fetch the data first, this should only take a second.
+      </p>
+    </loading-game>
+    <welcome>
+      <section id="zero" style="transform: translateY(100%);">
+        <h1>
+          welcome to selenite!
+        </h1>
+        <button id="nextPage">
+          next
+        </button>
+        <button id="skip">
+          skip
+        </button>
+      </section>
+      <section id="one" style="transform: translateY(100%);">
+        <h1>
+          themes
+        </h1>
+        <p>
+          theme selector
+        </p>
+        <button id="nextPage">
+          next
+        </button>
+      </section>
+      <section id="two" style="transform: translateY(100%);">
+        <h1>
+          settings
+        </h1>
+        <p>
+          tab cloak
+        </p>
+        <p>
+          panic button
+        </p>
+        <p>
+          automaically launch in tab cloak
+        </p>
+        <button id="nextPage">
+          next
+        </button>
+      </section>
+      <section id="three" style="transform: translateY(100%);">
+        <h1>
+          performance
+        </h1>
+        <p>
+          fast mode
+        </p>
+        <button id="nextPage">
+          next
+        </button>
+      </section>
+      <section id="four" style="transform: translateY(100%);">
+        <h1>
+          thank you! enjoy
+        </h1>
+        <button id="nextPage">
+          done
+        </button>
+      </section>
+    </welcome>
+    <div id="blur">
+    </div>
+    <iframe id="iframe" src="home.html" allow="cross-origin-isolated">
+    </iframe>
+    <!-- to do
+		add colors -->
+    <sidebar>
+      <div class="sidebar-item">
+        <a href="#" target="/home">        <img src="/img/home.svg" />
+</a>
+        <div class="sidebar-item-descriptor">
+          home
+        </div>
+      </div>
+      <!-- home -->
+      <div class="sidebar-item">
+        <a href="#" target="/projects">        <img src="/img/games.svg" />
+</a>
+        <div class="sidebar-item-descriptor">
+          games
+        </div>
+      </div>
+      <!-- games -->
+      <div class="sidebar-item">
+        <a href="#" target="/apps">        <img src="/img/apps.svg" />
+</a>
+        <div class="sidebar-item-descriptor">
+          apps
+        </div>
+      </div>
+      <!-- apps -->
+      <div class="sidebar-item">
+        <a href="#" target="/bookmarklets">        <img src="/img/bookmarklets.svg" />
+</a>
+        <div class="sidebar-item-descriptor">
+          bookmarklets
+        </div>
+      </div>
+      <!-- reload -->
+      <div class="sidebar-item">
+        <a href="#" id="openblank">        <img src="/img/open.svg" />
+</a>
+        <div class="sidebar-item-descriptor">
+          open blank
+        </div>
+      </div>
+      <!-- open blank -->
+      <div class="sidebar-item">
+        <a href="#" id="fullscreen">        <img src="/img/fullscreen.svg" />
+</a>
+        <div class="sidebar-item-descriptor">
+          fullscreen
+        </div>
+      </div>
+      <!-- open blank -->
+      <div class="sidebar-divider">
+      </div>
+      <div class="sidebar-item">
+        <a href="#" target="/u/">        <img src="/img/user.svg" />
+</a>
+        <div class="sidebar-item-descriptor">
+          user profile
+        </div>
+      </div>
+      <!-- user -->
+      <div class="sidebar-item">
+        <a href="#" target="/settings">        <img src="/img/settings.svg" />
+</a>
+        <div class="sidebar-item-descriptor">
+          settings
+        </div>
+      </div>
+      <!-- settings -->
+      <div class="sidebar-item">
+        <a href="#" target="/info">        <img src="/img/info.svg" />
+</a>
+        <div class="sidebar-item-descriptor">
+          information
+        </div>
+      </div>
+      <!-- info -->
+    </sidebar>
+    <div id="open-bottom-menu">
+    </div>
+    <div id="bottom-menu">
+      <div class="bottom-item">
+        <p id="online">
+          currently online: --
+        </p>
+      </div>
+      <div class="bottom-item">
+        <p>
+          |
+        </p>
+      </div>
+      <div class="bottom-item">
+        <p id="weather">
+          --°F 🌩️
+        </p>
+      </div>
+      <div class="bottom-item">
+        <p>
+          |
+        </p>
+      </div>
+      <div class="bottom-item">
+        <p id="time">
+          7:41:21 pm
+        </p>
+      </div>
+    </div>
+    <div style="display:none">
+      <h1 id="edu-title">
+        Johnson Education
+      </h1>
+      <button id="edu-button">
+        Math Lessons
+      </button>
+      <p id="edu-text">
+        Educational Resources for Students
+      </p>
+      <p id="edu-text">
+        Science Textbooks
+      </p>
+      <h1>
+        Educational Resources and Online Learning Platform
+      </h1>
+      <p>
+        Comprehensive education platform for students, teachers, and lifelong learners. Access online courses, study materials, exam preparation resources, and interactive learning tools.
+      </p>
+      <section>
+        <h2>
+          Academic Subjects
+        </h2>
+        <p>
+          Mathematics, Science, English, History, Literature, Writing, Reading, Social Studies, Geography, Biology, Chemistry, Physics, Algebra, Geometry, Calculus, Statistics, Computer Science, Programming, Foreign Languages, Art, Music
+        </p>
+      </section>
+      <section>
+        <h2>
+          Educational Services
+        </h2>
+        <p>
+          Online courses, college credit, exam preparation, test prep, tutoring, homework help, study guides, practice tests, educational videos, interactive lessons, learning resources, curriculum development, academic support, student success, teacher resources, educational technology, e-learning, distance education, virtual classroom, online tutoring, academic coaching
+        </p>
+      </section>
+      <section>
+        <h2>
+          Student Levels
+        </h2>
+        <p>
+          K-12 education, elementary school, middle school, high school, college, university, graduate school, continuing education, adult learning, professional development, certification programs, degree programs, homeschool education
+        </p>
+      </section>
+      <section>
+        <h2>
+          Test Preparation
+        </h2>
+        <p>
+          SAT prep, ACT prep, GRE prep, GMAT prep, LSAT prep, MCAT prep, AP courses, Advanced Placement, standardized tests, college entrance exams, professional certification exams, state assessments, final exams, midterms
+        </p>
+      </section>
+      <section>
+        <h3>
+          Learning Methods
+        </h3>
+        <p>
+          Interactive learning, video lessons, practice quizzes, flashcards, study notes, educational games, adaptive learning, personalized education, self-paced learning, collaborative learning, project-based learning, STEM education, critical thinking, problem solving
+        </p>
+      </section>
+    </div>
+  </body>
+</html>
+
+
